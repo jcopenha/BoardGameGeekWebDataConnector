@@ -186,15 +186,12 @@
 
     function getBoardgameData(table, boardgame_ids) {
         tableData = [];
-        plays = [];
 
         ids_per_request = 20;
         connectionData = JSON.parse(tableau.connectionData);
         boardgame_id = boardgame_ids[0];
         boardgame_count = boardgame_ids.length;
-        max_boardgame_id = boardgame_id + boardgame_count;
-        if(boardgame_count < 1)
-            boardgame_count = 1;
+
 
         next_id = 0;
         // bgg limits to about 2/sec.. so. Maybe put 20 ids per request then iterate over items..
@@ -204,35 +201,35 @@
         // ok.. too much trouble to get a bunch of games
         // instead.. get a username. get the plays for that user and then all
         // the boardgame info for each play. And put that in tableau.
-        for(i = 0; i < (boardgame_count/ids_per_request)+1 && next_id < max_boardgame_id; i++) {
+        while(boardgame_ids.length !== 0 ) {
+            idn = [];
+            idn.push(boardgame_ids.pop());
+            while(idn.length != 20 && boardgame_ids.length != 0) {
+                idn.push(boardgame_ids.pop());
+            }
+
             ids = ""
-            id = 0
-            for(n = 0; n < ids_per_request-1; n++) {
-                id = (boardgame_id + (i*ids_per_request) + n);
+            // corener cases I'm sure..
+            for(n = 0; n < idn.length-1; n++) {
+                id = idn[n];
                 ids += id + ",";
             }
-            id++;
-            ids += id;
-            next_id = id + 1;       
+            ids += idn[idn.length-1];
             url = "http://localhost:8889/www.boardgamegeek.com/xmlapi2/thing?stats=1&id=" + ids;
                 // have to use CORS proxy of course.
-            $.ajax({url: 'http://localhost:8889/www.boardgamegeek.com/xmlapi2/thing?stats=1&id=' + ids, 
+            $.ajax({url: url, 
                 success: function (xml) {
                     $xml = $( xml )
                     // assume it always works. 
                     $items = $xml.find( "items" ).children();
                     $items.each(function(){
-                        plays.push(parseBoardgame($(this)));  
+                        tableData.push(parseBoardgame($(this)));  
                     });
                 
                 }, 
                 async: false});
         }
-        for(p in plays) {
-            tableData.push(plays[p]);
-        } 
         table.appendRows(tableData);
-        //doneCallback();
     }
 
     function parsePlay(play) {
