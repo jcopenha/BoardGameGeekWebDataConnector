@@ -5,8 +5,8 @@
     // Define the schema
     myConnector.getSchema = function(schemaCallback) {
         var cols = [{
-            id: "id",
-            alias: "id",
+            id: "boardgame_id",
+            alias: "boardgame_id",
             dataType: tableau.dataTypeEnum.int
         }, {
             id: "name",
@@ -98,17 +98,42 @@
             dataType: tableau.dataTypeEnum.float
         }];
 
-        var tableInfo = {
-            id: "boardgamegeekFeed",
+        var tableInfoBoardgame = {
+            id: "boardgames",
             alias: "BoardgameGeek Game Info",
             columns: cols
         };
 
-        schemaCallback([tableInfo]);
+        var colsPlay = [
+        {
+            id: "play_id",
+            alias: "play_id",
+            dataType: tableau.dataTypeEnum.int
+        },{
+            id: "quantity",
+            alias: "quantity",
+            dataType: tableau.dataTypeEnum.int
+        },{
+            id: "date",
+            alias: "date",
+            dataType: tableau.dataTypeEnum.date
+        },{
+            id: "boardgame_id",
+            alias: "boardgame_id",
+            dataType: tableau.dataTypeEnum.int
+        }];
+        
+        var tableInfoPlay = {
+            id: "plays",
+            alias: "BoardgameGeek Play Info",
+            columns: colsPlay
+        };
+
+        schemaCallback([tableInfoPlay, tableInfoBoardgame]);
     };
 
     function parseBoardgame(item) {
-        id = parseInt(item.attr("id"));
+        boardgame_id = parseInt(item.attr("id"));
         name = item.find("name").attr("value");
         thumbnail = item.find("thumbnail").text()
         image = item.find("image").text()
@@ -133,7 +158,7 @@
         rating_numweights = parseInt($ratings.find("numweights").attr('value'));
         rating_averageweight= parseFloat($ratings.find("averageweight").attr('value'));
 
-        return {"id": id,
+        return {"boardgame_id": boardgame_id,
                 "name": name,
                 "thumbnailurl": thumbnail,
                 "imageurl": image,
@@ -158,14 +183,15 @@
                 "rating_averageweight": rating_averageweight
             };
     }
-    // Download the data
-    myConnector.getData = function(table, doneCallback) {
+
+    function getBoardgameData(table, boardgame_ids) {
         tableData = [];
+        plays = [];
 
         ids_per_request = 20;
         connectionData = JSON.parse(tableau.connectionData);
-        boardgame_id = connectionData.boardgame_id;
-        boardgame_count = connectionData.boardgame_count;
+        boardgame_id = boardgame_ids[0];
+        boardgame_count = boardgame_ids.length;
         max_boardgame_id = boardgame_id + boardgame_count;
         if(boardgame_count < 1)
             boardgame_count = 1;
@@ -193,46 +219,87 @@
             $.ajax({url: 'http://localhost:8889/www.boardgamegeek.com/xmlapi2/thing?stats=1&id=' + ids, 
                 success: function (xml) {
                     $xml = $( xml )
-                    // check if it failed. if it did.. go through each one and do that
-                    if($xml.find('div').length) {
-                        s = ids.split(',');
-                        for (n in s ){
-                            url = "http://localhost:8889/www.boardgamegeek.com/xmlapi2/thing?stats=1&id=" + s[n];
-                            $.ajax({url: url,
-                                    success: function (xml) {
-                                            $xml = $( xml );
-                                            $items = $xml.find( "items" ).children();
-                                            $items.each(function(){
-                                                tableData.push(parseBoardgame($(this)));  
-                                        });
-                                    },
-                                    async: false});
-                        }
-                    } else {
-                        $items = $xml.find( "items" ).children();
-                        $items.each(function(){
-                            tableData.push(parseBoardgame($(this)));  
-                        });
-                    }
+                    // assume it always works. 
+                    $items = $xml.find( "items" ).children();
+                    $items.each(function(){
+                        plays.push(parseBoardgame($(this)));  
+                    });
+                
                 }, 
                 async: false});
         }
-         
+        for(p in plays) {
+            tableData.push(plays[p]);
+        } 
         table.appendRows(tableData);
-        doneCallback();    
+        //doneCallback();
+    }
+
+    function parsePlay(play) {
+        play_id = play.attr('id');
+        quantity = play.attr('quantity');
+        date = play.attr('date');
+        boardgame_id = play.find('item').attr('objectid');
+        myConnector.boardgames.push(parseInt(boardgame_id));
+        return {"play_id": play_id,
+                "quantity": quantity,
+                "date": date,
+                "boardgame_id": boardgame_id};
+    }
+    function sort_unique(arr) {
+        arr = arr.sort(function (a, b) { return a*1 - b*1; });
+        var ret = [arr[0]];
+        for (var i = 1; i < arr.length; i++) { // start loop at 1 as element 0 can never be a duplicate
+            if (arr[i-1] !== arr[i]) {
+                ret.push(arr[i]);
+            }
+        }
+        return ret;
+    }
+    // Download the data
+    myConnector.getData = function(table, doneCallback) {
+        // build board game ids
+        tableData = [];
+        plays = [];
+        
+        if(table.tableInfo.id === "plays") {
+            // grab play info.. fill in table.. 
+            // update connectionData with boardgame ids to get?
+            // or update myconnector with data? store them in myconnector
+            connectionData = JSON.parse(tableau.connectionData);
+            username = connectionData.username;
+
+            url = "http://localhost:8889/www.boardgamegeek.com/xmlapi2/plays?username=" + username;
+            $.ajax({url: url, 
+                success: function (xml) {
+                    $xml = $( xml )
+                    // assume it always works. 
+                    $items = $xml.find( "plays" ).children();
+                    $items.each(function(){
+                        plays.push(parsePlay($(this)));  
+                    });
+                }, 
+                async: false});
+            table.appendRows(plays);
+            doneCallback();
+        } else {
+
+            getBoardgameData(table,sort_unique(myConnector.boardgames));
+            doneCallback();
+        }
+        
     };
 
+    myConnector.boardgames = [];
     tableau.registerConnector(myConnector);
 
     // Create event listeners for when the user submits the form
     $(document).ready(function() {
         $("#submitButton").click(function() {
-            boardgame_id = parseInt($('#boardgame_id').val());         
-            boardgame_count = parseInt($('#boardgame_count').val());
-
+            username = $('#username').val();
             
             tableau.connectionName = "Boardgame Geek Feed"; // This will be the data source name in Tableau
-            tableau.connectionData = JSON.stringify({'boardgame_id': boardgame_id, 'boardgame_count': boardgame_count});
+            tableau.connectionData = JSON.stringify({'username': username });
             tableau.submit(); // This sends the connector object to Tableau
         });
     });
