@@ -1,7 +1,7 @@
 {
-  "name": "react-tutorial",
+  "name": "BoardGameGeekUserPlayWDC",
   "version": "0.0.1",
-  "description": "Code from the React tutorial",
+  "description": "Connect to the BoardGameGeek XMLAPI as a Tableau WDC",
   "main": "server.js",
   "dependencies": {
     "body-parser": "^1.4.3",
@@ -16,16 +16,16 @@
     "url": "https://github.com/reactjs/react-tutorial.git"
   },
   "keywords": [
-    "react",
-    "tutorial",
-    "comment",
-    "example"
+    "tableau",
+    "wdc",
+    "bgg",
+    "boardgamegeek"
   ],
-  "author": "petehunt",
+  "author": "jcopenha",
   "bugs": {
-    "url": "https://github.com/reactjs/react-tutorial/issues"
+    "url": "https://github.com/jcopenha/BoardGameGeekWebDataConnector/issues"
   },
-  "homepage": "https://github.com/reactjs/react-tutorial",
+  "homepage": "https://github.com/jcopenha/BoardGameGeekWebDataConnector",
   "engines" : {
     "node" : "0.12.x"
   }
