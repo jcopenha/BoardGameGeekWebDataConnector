@@ -203,7 +203,7 @@
                 ids += id + ",";
             }
             ids += idn[idn.length-1];
-            url = "https://garnet-viper.hyperdev.space/thing?stats=1&id=" + ids;
+            url = "https://garnet-viper.hyperdev.space/things?stats=1&id=" + ids;
                 // have to use CORS proxy of course.
             $.ajax({url: url, 
                 success: function (xml) {
@@ -287,7 +287,7 @@
         $("#submitButton").click(function() {
             username = $('#username').val();
             
-            tableau.connectionName = "Boardgame Geek Feed"; // This will be the data source name in Tableau
+            tableau.connectionName = "BoardGameGeek User Plays"; // This will be the data source name in Tableau
             tableau.connectionData = JSON.stringify({'username': username });
             tableau.submit(); // This sends the connector object to Tableau
         });
