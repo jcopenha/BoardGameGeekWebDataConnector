@@ -188,19 +188,7 @@
         tableData = [];
 
         ids_per_request = 20;
-        connectionData = JSON.parse(tableau.connectionData);
-        boardgame_id = boardgame_ids[0];
-        boardgame_count = boardgame_ids.length;
 
-
-        next_id = 0;
-        // bgg limits to about 2/sec.. so. Maybe put 20 ids per request then iterate over items..
-        // bgg likes to error the entire request if it can't read ONE id in the list of requested ids
-        // that.. SUCKS
-
-        // ok.. too much trouble to get a bunch of games
-        // instead.. get a username. get the plays for that user and then all
-        // the boardgame info for each play. And put that in tableau.
         while(boardgame_ids.length !== 0 ) {
             idn = [];
             idn.push(boardgame_ids.pop());
@@ -243,6 +231,7 @@
                 "date": date,
                 "boardgame_id": boardgame_id};
     }
+
     function sort_unique(arr) {
         arr = arr.sort(function (a, b) { return a*1 - b*1; });
         var ret = [arr[0]];
@@ -260,12 +249,11 @@
         plays = [];
         
         if(table.tableInfo.id === "plays") {
-            // grab play info.. fill in table.. 
-            // update connectionData with boardgame ids to get?
-            // or update myconnector with data? store them in myconnector
             connectionData = JSON.parse(tableau.connectionData);
             username = connectionData.username;
 
+            // gotta handle paged plays. 
+            // add page=N until plays is zero.. 
             url = "http://localhost:8889/www.boardgamegeek.com/xmlapi2/plays?username=" + username;
             $.ajax({url: url, 
                 success: function (xml) {
