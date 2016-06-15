@@ -251,20 +251,24 @@
         if(table.tableInfo.id === "plays") {
             connectionData = JSON.parse(tableau.connectionData);
             username = connectionData.username;
+            current_page = 1;
+            last_count = -1;
 
-            // gotta handle paged plays. 
-            // add page=N until plays is zero.. 
-            url = "http://localhost:8889/www.boardgamegeek.com/xmlapi2/plays?username=" + username;
-            $.ajax({url: url, 
-                success: function (xml) {
-                    $xml = $( xml )
-                    // assume it always works. 
-                    $items = $xml.find( "plays" ).children();
-                    $items.each(function(){
-                        plays.push(parsePlay($(this)));  
-                    });
-                }, 
-                async: false});
+            while(last_count != plays.length) {
+                last_count = plays.length;
+                url = "http://localhost:8889/www.boardgamegeek.com/xmlapi2/plays?username=" + username + "&page=" + current_page;
+                $.ajax({url: url, 
+                    success: function (xml) {
+                        $xml = $( xml )
+                        // assume it always works. 
+                        $items = $xml.find( "plays" ).children();
+                        $items.each(function(){
+                            plays.push(parsePlay($(this)));  
+                        });
+                    }, 
+                    async: false});
+                current_page++;
+            }
             table.appendRows(plays);
             doneCallback();
         } else {
