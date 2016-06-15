@@ -203,7 +203,7 @@
                 ids += id + ",";
             }
             ids += idn[idn.length-1];
-            url = "http://localhost:8889/www.boardgamegeek.com/xmlapi2/thing?stats=1&id=" + ids;
+            url = "https://garnet-viper.hyperdev.space/thing?stats=1&id=" + ids;
                 // have to use CORS proxy of course.
             $.ajax({url: url, 
                 success: function (xml) {
@@ -256,7 +256,7 @@
 
             while(last_count != plays.length) {
                 last_count = plays.length;
-                url = "http://localhost:8889/www.boardgamegeek.com/xmlapi2/plays?username=" + username + "&page=" + current_page;
+                url = "https://garnet-viper.hyperdev.space/plays?username=" + username + "&page=" + current_page;
                 $.ajax({url: url, 
                     success: function (xml) {
                         $xml = $( xml )
