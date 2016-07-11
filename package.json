@@ -4,9 +4,13 @@
   "description": "Connect to the BoardGameGeek XMLAPI as a Tableau WDC",
   "main": "server.js",
   "dependencies": {
+    "hyperweb": "0.0.9",
     "body-parser": "^1.4.3",
     "express": "^4.4.5",
-    "request": "^2.7.20"
+    "request": "^2.7.20",
+    "aws-sdk": "^2.2.12",
+    "synchronize": "^0.9.14",
+    "xml2json": "^0.9.1"
   },
   "scripts": {
     "start": "node server.js"
